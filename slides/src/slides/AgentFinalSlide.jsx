@@ -1,4 +1,4 @@
-import { SlideContainer, CornerSquares, Dots } from "@/components"
+import { SlideContainer, CodePanel } from "@/components"
 import { motion } from "framer-motion"
 
 const CODE = `import { createInterface } from "readline";
@@ -101,15 +101,15 @@ while (true) {
 rl.close();`
 
 const HIGHLIGHTS = {
-  0:  { label: "imports",     color: "#22d3ee" },
-  3:  { label: "tools",       color: "#a855f7" },
-  17: { label: "bash",        color: "#22d3ee" },
-  25: { label: "system",      color: "#22d3ee" },
-  31: { label: "messages",    color: "#a855f7" },
-  33: { label: "runAgent",    color: "#22d3ee" },
-  57: { label: "end_turn",    color: "#a855f7" },
-  62: { label: "tool_use",    color: "#22d3ee" },
-  90: { label: "repl loop",   color: "#a855f7" },
+  0:  { label: "imports",  color: "#22d3ee" },
+  3:  { label: "tools",    color: "#a855f7" },
+  17: { label: "bash",     color: "#22d3ee" },
+  25: { label: "system",   color: "#22d3ee" },
+  31: { label: "messages", color: "#a855f7" },
+  33: { label: "runAgent", color: "#22d3ee" },
+  57: { label: "end_turn", color: "#a855f7" },
+  62: { label: "tool_use", color: "#22d3ee" },
+  90: { label: "repl loop", color: "#a855f7" },
 }
 
 function highlight(line) {
@@ -118,15 +118,13 @@ function highlight(line) {
     .replace(/(`(?:[^`\\]|\\.)*`)/g, '<span style="color:#86efac">$1</span>')
     .replace(/\b(import|const|function|while|true|if|break|for|return|let|try|catch|async|await)\b/g, '<span style="color:#a855f7">$1</span>')
     .replace(/\b(fetch|JSON\.stringify|console\.log|console\.warn|execSync|createInterface|bash)\b/g, '<span style="color:#22d3ee">$1</span>')
-    .replace(/\b(process)\b/g, '<span style="color:#fbbf24">$1</span>')
-    .replace(/\b(\d+)\b/g, '<span style="color:#fbbf24">$1</span>')
+    .replace(/\b(process|\d+)\b/g, '<span style="color:#fbbf24">$1</span>')
 }
 
 export function AgentFinalSlide() {
   return (
     <SlideContainer showDots={false}>
       <div className="flex h-full w-full flex-col gap-4">
-
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,34 +136,15 @@ export function AgentFinalSlide() {
           <span className="font-mono text-xs text-foreground-200">agent.js</span>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.15 }}
-          className="relative flex flex-1 flex-col border border-border-100 bg-background-200 min-h-0"
-        >
-          <Dots className="opacity-20" size={14} />
-          <CornerSquares size="sm" />
-
-          <div className="relative z-10 flex items-center gap-2 border-b border-border-100 px-4 py-2 shrink-0">
-            <div className="size-2 rounded-full bg-accent-100/60" />
-            <span className="font-mono text-xs text-foreground-200">agent.js</span>
-            <span className="ml-auto font-mono text-xs text-foreground-200/30">node agent.js</span>
-          </div>
-
-          <pre className="relative z-10 flex-1 overflow-auto p-5 font-mono text-sm leading-relaxed text-foreground-100">
-            {CODE.split("\n").map((line, i) => {
-              const hi = HIGHLIGHTS[i]
-              return (
-                <div key={i} className="flex gap-3" style={hi ? { backgroundColor: `${hi.color}12` } : undefined}>
-                  <span className="w-6 shrink-0 select-none text-right text-foreground-200/30 text-xs pt-px">{i + 1}</span>
-                  <span className="flex-1" dangerouslySetInnerHTML={{ __html: highlight(line) || "&nbsp;" }} />
-                  {hi && <span className="shrink-0 self-center font-mono text-xs opacity-70 pr-2" style={{ color: hi.color }}>← {hi.label}</span>}
-                </div>
-              )
-            })}
-          </pre>
-        </motion.div>
+        <CodePanel
+          filename="agent.js"
+          code={CODE}
+          highlights={HIGHLIGHTS}
+          highlightFn={highlight}
+          showRunButton={false}
+          headerExtra="node agent.js"
+          className="flex-1"
+        />
       </div>
     </SlideContainer>
   )

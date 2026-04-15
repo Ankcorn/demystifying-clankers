@@ -1,4 +1,4 @@
-import { SlideContainer, CornerSquares, Dots } from "@/components"
+import { SlideContainer, Panel } from "@/components"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useRef, useEffect } from "react"
 
@@ -30,7 +30,7 @@ function TraceItem({ item }) {
   }
   if (item.type === "done") {
     return (
-      <div className="text-sm text-foreground-100 leading-relaxed whitespace-pre-wrap pl-0">
+      <div className="text-sm text-foreground-100 leading-relaxed whitespace-pre-wrap">
         {item.text}
       </div>
     )
@@ -120,27 +120,18 @@ export function AgentSlide() {
   return (
     <SlideContainer showDots={false}>
       <div className="flex h-full w-full flex-col gap-4">
-
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="flex items-baseline gap-4 shrink-0"
         >
-          <span className="font-mono text-xs text-foreground-200 opacity-50">06</span>
+          <span className="font-mono text-xs text-foreground-200 opacity-50">07</span>
           <h3 className="text-foreground-100">The <span className="text-accent-100">Agent</span></h3>
           <span className="font-mono text-xs text-foreground-200">bash tool · persistent context</span>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.15 }}
-          className="relative flex flex-1 flex-col border border-border-100 bg-background-200 min-h-0"
-        >
-          <Dots className="opacity-20" size={14} />
-          <CornerSquares size="sm" />
-
+        <Panel animDelay={0.15} showDots className="flex-1">
           {/* Terminal chrome */}
           <div className="relative z-10 flex items-center gap-2 border-b border-border-100 px-4 py-2 shrink-0">
             <div className="size-2 rounded-full bg-red-500/50" />
@@ -215,7 +206,7 @@ export function AgentSlide() {
               ) : "enter ↵"}
             </button>
           </div>
-        </motion.div>
+        </Panel>
       </div>
     </SlideContainer>
   )

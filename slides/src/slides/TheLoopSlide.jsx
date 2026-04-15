@@ -1,6 +1,6 @@
-import { SlideContainer, CornerSquares, Dots } from "@/components"
-import { motion, AnimatePresence } from "framer-motion"
-import { useState } from "react"
+import { SlideContainer, CodePanel, OutputPanel } from "@/components"
+import { motion } from "framer-motion"
+import { useCodeRunner } from "@/hooks/useCodeRunner"
 
 const CODE = `const data = await fetch("https://api.anthropic.com/v1/messages", {
   method: "POST",
@@ -27,12 +27,26 @@ const CODE = `const data = await fetch("https://api.anthropic.com/v1/messages", 
 
 if (data.error) throw new Error(data.error.message)
 console.log("stop_reason:", data.stop_reason)
-console.log(JSON.stringify(data.content, null, 2))`
+console.log(JSON.stringify(data.content, null, 2))
+
+const { exec } = await import("child_process")
+const bash = ({ command }) => new Promise(resolve =>
+  exec(command, (_, out, err) => resolve((out || err || "").trim()))
+)
+
+for (const block of data.content) {
+  if (block.type !== "tool_use") continue
+  console.log("\\n→ bash:", block.input.command)
+  const result = await bash(block.input)
+  console.log("←", result)
+}`
 
 const HIGHLIGHTS = {
   10: { label: "tools",       color: "#22d3ee" },
   19: { label: "messages",    color: "#a855f7" },
   24: { label: "stop_reason", color: "#22d3ee" },
+  27: { label: "bash tool",   color: "#a855f7" },
+  32: { label: "execute",     color: "#22d3ee" },
 }
 
 function highlight(line) {
@@ -45,31 +59,11 @@ function highlight(line) {
 }
 
 export function TheLoopSlide() {
-  const [status, setStatus] = useState("idle")
-  const [output, setOutput] = useState("")
-
-  async function run() {
-    setStatus("running")
-    setOutput("")
-    try {
-      const res = await fetch("http://localhost:3001/code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: CODE }),
-      })
-      const json = await res.json()
-      setOutput(json.output)
-      setStatus(json.error ? "error" : "done")
-    } catch {
-      setOutput("Could not reach eval server.\nRun: node server.mjs")
-      setStatus("error")
-    }
-  }
+  const { status, output, run } = useCodeRunner(CODE)
 
   return (
     <SlideContainer showDots={false}>
       <div className="flex h-full w-full flex-col gap-4">
-
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -82,91 +76,15 @@ export function TheLoopSlide() {
         </motion.div>
 
         <div className="grid flex-1 grid-cols-2 gap-4 min-h-0">
-
-          {/* Left — code */}
-          <motion.div
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, delay: 0.15 }}
-            className="relative flex flex-col border border-border-100 bg-background-200 min-h-0"
-          >
-            <Dots className="opacity-20" size={14} />
-            <CornerSquares size="sm" />
-
-            <div className="relative z-10 flex items-center gap-2 border-b border-border-100 px-4 py-2 shrink-0">
-              <div className="size-2 rounded-full bg-accent-100/60" />
-              <span className="font-mono text-xs text-foreground-200">agent-tool.mjs</span>
-            </div>
-
-            <pre className="relative z-10 flex-1 overflow-auto p-5 font-mono text-sm leading-relaxed text-foreground-100">
-              {CODE.split("\n").map((line, i) => {
-                const hi = HIGHLIGHTS[i]
-                return (
-                  <div key={i} className="flex gap-3" style={hi ? { backgroundColor: `${hi.color}12` } : undefined}>
-                    <span className="w-5 shrink-0 select-none text-right text-foreground-200/30 text-xs pt-px">{i + 1}</span>
-                    <span className="flex-1" dangerouslySetInnerHTML={{ __html: highlight(line) || "&nbsp;" }} />
-                    {hi && <span className="shrink-0 self-center font-mono text-xs opacity-70 pr-2" style={{ color: hi.color }}>← {hi.label}</span>}
-                  </div>
-                )
-              })}
-            </pre>
-
-            <div className="relative z-10 flex justify-end border-t border-border-100 p-3 shrink-0">
-              <button
-                onClick={run}
-                disabled={status === "running"}
-                className="flex items-center gap-2 rounded border border-accent-100/40 bg-accent-100/10 px-3 py-1.5 font-mono text-xs text-accent-100 transition-all hover:bg-accent-100/20 disabled:opacity-40"
-              >
-                {status === "running" ? (
-                  <><motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="inline-block">◌</motion.span> running…</>
-                ) : <>▶ Run</>}
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Right — output */}
-          <motion.div
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, delay: 0.25 }}
-            className="relative flex flex-col border border-border-100 bg-background-200 min-h-0"
-          >
-            <CornerSquares size="sm" />
-
-            <div className="relative z-10 flex items-center gap-2 border-b border-border-100 px-4 py-2 shrink-0">
-              <div className="size-2 rounded-full bg-red-500/50" />
-              <div className="size-2 rounded-full bg-yellow-500/50" />
-              <div className="size-2 rounded-full bg-green-500/50" />
-              <span className="ml-2 font-mono text-xs text-foreground-200">output</span>
-            </div>
-
-            <div className="relative z-10 flex flex-1 flex-col justify-start p-6 font-mono text-sm">
-              <AnimatePresence mode="wait">
-                {status === "idle" && (
-                  <motion.p key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-foreground-200/40">
-                    press ▶ Run to execute
-                  </motion.p>
-                )}
-                {status === "running" && (
-                  <motion.div key="running" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-foreground-200">
-                    <motion.span animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>█</motion.span>
-                    calling anthropic…
-                  </motion.div>
-                )}
-                {(status === "done" || status === "error") && (
-                  <motion.div key="output" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-2">
-                    <span className={`text-xs mb-1 ${status === "error" ? "text-red-400" : "text-compute-100"}`}>
-                      {status === "error" ? "stderr" : "stdout"}
-                    </span>
-                    <pre className={`text-sm leading-relaxed whitespace-pre-wrap ${status === "error" ? "text-red-300" : "text-foreground-100"}`}>
-                      {output}
-                    </pre>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
+          <CodePanel
+            filename="agent-tool.mjs"
+            code={CODE}
+            highlights={HIGHLIGHTS}
+            highlightFn={highlight}
+            status={status}
+            onRun={run}
+          />
+          <OutputPanel status={status} output={output} />
         </div>
       </div>
     </SlideContainer>

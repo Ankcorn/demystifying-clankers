@@ -1,3 +1,6 @@
 export { SlideContainer } from "./SlideContainer"
 export { Dots } from "./Dots"
 export { CornerSquares } from "./CornerSquares"
+export { Panel } from "./Panel"
+export { CodePanel } from "./CodePanel"
+export { OutputPanel } from "./OutputPanel"
