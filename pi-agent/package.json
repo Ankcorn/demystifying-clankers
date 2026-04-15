@@ -1,0 +1,8 @@
+{
+  "name": "pi-agent",
+  "type": "module",
+  "dependencies": {
+    "@mariozechner/pi-ai": "latest",
+    "@mariozechner/pi-coding-agent": "latest"
+  }
+}
