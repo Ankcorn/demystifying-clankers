@@ -140,10 +140,10 @@ export function ToolUseSlide() {
             05
           </span>
           <h3 className="text-foreground-100">
-            Tool <span className="text-accent-100">Use</span>
+            Add the <span className="text-accent-100">loop</span>
           </h3>
           <span className="font-mono text-xs text-foreground-200">
-            agent-tools.mjs
+            agent-loop.mjs
           </span>
         </motion.div>
 
@@ -161,7 +161,7 @@ export function ToolUseSlide() {
             <div className="relative z-10 flex items-center gap-2 border-b border-border-100 px-4 py-2 shrink-0">
               <div className="size-2 rounded-full bg-accent-100/60" />
               <span className="font-mono text-xs text-foreground-200">
-                agent-tools.mjs
+                agent-loop.mjs
               </span>
             </div>
 
